@@ -17,7 +17,7 @@ It interacts with the **FastAPI backend** to allow users to **register, login, a
 
 ### 1️⃣ Clone the repo
 ```bash
-git clone https://github.com/rahulgtst/note-frontend.git
+git clone https://github.com/rahulgtst/note-taking.git
 cd note-frontend
 ````
 
