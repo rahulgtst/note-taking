@@ -1,103 +1,195 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import NoteCard from "@/components/NoteCard";
+import Modal from "@/components/Modal";
+
+export default function HomePage() {
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "delete" | null>(null);
+  const [activeNote, setActiveNote] = useState<any | null>(null);
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  const username = 'Rahul';
+
+  async function fetchNotes() {
+    setLoading(true);
+    try {
+      const res = await api.get("/notes");
+      setNotes(res.data);
+    } catch (err) {
+      console.error("Error fetching notes", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  function openCreateModal() {
+    setModalMode("create");
+    setTitle("");
+    setContent("");
+    setActiveNote(null);
+    setIsModalOpen(true);
+  }
+
+  function openEditModal(note: any) {
+    setModalMode("edit");
+    setTitle(note.note_title);
+    setContent(note.note_content);
+    setActiveNote(note);
+    setIsModalOpen(true);
+  }
+
+  function openDeleteModal(note: any) {
+    setModalMode("delete");
+    setActiveNote(note);
+    setIsModalOpen(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      if (modalMode === "create") {
+        await api.post("/notes", {
+          note_title: title,
+          note_content: content,
+        });
+      } else if (modalMode === "edit" && activeNote) {
+        await api.put(`/notes/${activeNote.note_id}`, {
+          note_title: title,
+          note_content: content,
+        });
+      }
+      setIsModalOpen(false);
+      fetchNotes();
+    } catch (err) {
+      console.error("Save failed", err);
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      if (activeNote) {
+        await api.delete(`/notes/${activeNote.note_id}`);
+      }
+      setIsModalOpen(false);
+      fetchNotes();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-3xl mx-auto">
+        <span className="text-sm">HomePage/Notes</span>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Welcome {username}</h1>
+          <button
+            onClick={openCreateModal}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            + New Note
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : notes.length === 0 ? (
+          <p className="text-gray-500">No notes yet.</p>
+        ) : (
+          <div className="grid gap-4">
+            {notes.map((n) => (
+              <NoteCard
+                key={n.note_id}
+                note={n}
+                onEdit={openEditModal}
+                onDelete={openDeleteModal}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Create / Edit Modal */}
+      <Modal
+        isOpen={isModalOpen && (modalMode === "create" || modalMode === "edit")}
+        onClose={() => setIsModalOpen(false)}
+        title={modalMode === "create" ? "Create Note" : "Edit Note"}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-1">Content</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={4}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 border rounded hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={isModalOpen && modalMode === "delete"}
+        onClose={() => setIsModalOpen(false)}
+        title="Delete Note"
+      >
+        <p className="mb-6">
+          Are you sure you want to delete{" "}
+          <span className="font-semibold">{activeNote?.note_title}</span>?
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setIsModalOpen(false)}
+            className="px-4 py-2 border rounded hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
