@@ -3,7 +3,11 @@
 A **Next + TypeScript** frontend for the Notes app.  
 It interacts with the **FastAPI backend** to allow users to **register, login, and manage notes**.
 
----
+## 🖼️ Preview
+
+![Register Page](./assets/auth_register.png)
+![Login Page](./assets/auth_login.png)
+
 
 ## 🚀 Tech Stack
 - **Framework:** Next 15
@@ -11,7 +15,6 @@ It interacts with the **FastAPI backend** to allow users to **register, login, a
 - **State Management:** Redux Toolkit (Will be added)
 - **UI:** TailwindCSS
 
----
 
 ## ⚙️ Setup
 
